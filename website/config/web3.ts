@@ -71,7 +71,8 @@ export const STONKBROKER_BUY_URL =
 // ==========================================
 // IPFS gateway used for the rotating preview-card images on the mint page
 // ==========================================
-export const IPFS_GATEWAY = process.env.NEXT_PUBLIC_IPFS_GATEWAY || "https://ipfs.io/ipfs/";
+// Keep NFT metadata resolution on the single supported public gateway.
+export const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
 
 // ==========================================
 // Alchemy — used by the Staking page to look up which Mini Brokers NFTs
