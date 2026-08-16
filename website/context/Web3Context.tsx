@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { ethers } from "ethers";
-import { WEB3_CONFIG, WALLETCONNECT_PROJECT_ID, WALLETCONNECT_CHAINS, ALCHEMY_RPC_URL } from "../config/web3";
+import { OWNER_ADDRESS, WEB3_CONFIG, WALLETCONNECT_PROJECT_ID, WALLETCONNECT_CHAINS, ALCHEMY_RPC_URL } from "../config/web3";
 import NFT_ABI from "../abi/NFT.json";
 import ERC20_ABI from "../abi/ERC20.json";
 import BURN_LAB_ABI from "../abi/BurnLab.json";
@@ -225,7 +225,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const [mintPrice, setMintPrice] = useState<bigint>(BigInt(0));
   const [isPaused, setIsPaused] = useState(false);
   const [publicMintEnabled, setPublicMintEnabled] = useState(false);
-  const [ownerAddress, setOwnerAddress] = useState("0x0000000000000000000000000000000000000000");
+  const [ownerAddress, setOwnerAddress] = useState(OWNER_ADDRESS);
   const [baseUri, setBaseUri] = useState("");
   const [revealed, setRevealed] = useState(false);
   const [royaltyFeeBps, setRoyaltyFeeBps] = useState(0);
@@ -274,7 +274,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       setMintPrice(price);
       setIsPaused(mp);
       setPublicMintEnabled(pme);
-      setOwnerAddress(ownr);
+      setOwnerAddress(OWNER_ADDRESS);
       setBaseUri(uri);
       setRevealed(rev);
       setRoyaltyFeeBps(Number(royalty[1] ?? 0));
@@ -712,9 +712,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   // ==========================================================
   const burnLabConfigured = !!WEB3_CONFIG.BURN_LAB_CONTRACT_ADDRESS;
 
-  const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(
-    "0x0000000000000000000000000000000000000000"
-  );
+const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
   const [burnRewards, setBurnRewards] = useState<BurnReward[]>([]);
   const [burnRewardsLoading, setBurnRewardsLoading] = useState(false);
 
@@ -750,7 +748,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         burnLab.owner().catch(() => "0x0000000000000000000000000000000000000000"),
         burnLab.getRewardsCount().catch(() => BigInt(0)),
       ]);
-      setBurnLabOwnerAddress(ownr);
+      setBurnLabOwnerAddress(OWNER_ADDRESS);
 
       const total = Number(count);
       const rewards: BurnReward[] = [];

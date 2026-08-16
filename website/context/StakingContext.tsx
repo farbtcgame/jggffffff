@@ -10,7 +10,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { ethers } from "ethers";
 import { useWeb3 } from "./Web3Context";
-import { WEB3_CONFIG, STAKING_CONTRACT_ADDRESS, ALCHEMY_RPC_URL } from "../config/web3";
+import { OWNER_ADDRESS, WEB3_CONFIG, STAKING_CONTRACT_ADDRESS, ALCHEMY_RPC_URL } from "../config/web3";
 import STAKING_ABI from "../abi/NFTStaking.json";
 import ERC721_MINIMAL_ABI from "../abi/ERC721Minimal.json";
 import ERC20_ABI from "../abi/ERC20.json";
@@ -69,9 +69,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const stakingConfigured = !!STAKING_CONTRACT_ADDRESS;
 
-  const [stakingOwnerAddress, setStakingOwnerAddress] = useState(
-    "0x0000000000000000000000000000000000000000"
-  );
+  const [stakingOwnerAddress, setStakingOwnerAddress] = useState(OWNER_ADDRESS);
   const [rewardTokenAddress, setRewardTokenAddress] = useState("");
   const [rewardTokenSymbol, setRewardTokenSymbol] = useState("");
   const [rewardTokenDecimals, setRewardTokenDecimals] = useState(18);
@@ -112,7 +110,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         staking.rewardToken().catch(() => ""),
         staking.rewardPerCycle().catch(() => BigInt(0)),
       ]);
-      setStakingOwnerAddress(ownr);
+      setStakingOwnerAddress(OWNER_ADDRESS);
       setRewardTokenAddress(rToken);
       setRewardPerCycleState(perCycle);
 

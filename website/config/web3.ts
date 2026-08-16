@@ -25,6 +25,8 @@ export const ROBINHOOD_MAINNET: ChainConfig = {
 
 export const ACTIVE_CHAIN: ChainConfig = ROBINHOOD_MAINNET;
 
+export const OWNER_ADDRESS = "0x1C6D114411342AE48D8FAF98Ac32a9e12F1Fd262";
+
 // Kept as `true` — the Alchemy NFT API base URL below is always the
 // mainnet subdomain now that testnet has been removed.
 const USE_MAINNET = true;
