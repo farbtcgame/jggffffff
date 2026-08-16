@@ -179,6 +179,11 @@ interface Web3ContextType {
   burnLabConfigured: boolean;
   burnLabOwnerAddress: string;
   isBurnLabOwner: boolean;
+  // True once we've read burnLab.nftContract() on-chain and it does NOT
+  // match the NFT contract this site is configured for. Burning must not
+  // be allowed while this is true — see executeBurn.
+  burnLabNftContractMismatch: boolean;
+  burnLabNftContractAddress: string;
   burnRewards: BurnReward[];
   burnRewardsLoading: boolean;
   refreshBurnLabData: () => Promise<void>;
@@ -713,6 +718,8 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   const burnLabConfigured = !!WEB3_CONFIG.BURN_LAB_CONTRACT_ADDRESS;
 
 const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
+  const [burnLabNftContractMismatch, setBurnLabNftContractMismatch] = useState(false);
+  const [burnLabNftContractAddress, setBurnLabNftContractAddress] = useState("");
   const [burnRewards, setBurnRewards] = useState<BurnReward[]>([]);
   const [burnRewardsLoading, setBurnRewardsLoading] = useState(false);
 
@@ -744,11 +751,28 @@ const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
       const provider = getReadProvider();
       const burnLab = new ethers.Contract(WEB3_CONFIG.BURN_LAB_CONTRACT_ADDRESS, BURN_LAB_ABI, provider);
 
-      const [ownr, count] = await Promise.all([
+      const [ownr, count, nftContractAddr] = await Promise.all([
         burnLab.owner().catch(() => "0x0000000000000000000000000000000000000000"),
         burnLab.getRewardsCount().catch(() => BigInt(0)),
+        burnLab.nftContract().catch(() => ""),
       ]);
-      setBurnLabOwnerAddress(OWNER_ADDRESS);
+      // Use the actual on-chain owner as the source of truth instead of
+      // overwriting it with the static OWNER_ADDRESS constant (that constant
+      // is the *NFT* contract's owner and is not guaranteed to be the same
+      // wallet as the Burn Lab contract's owner).
+      setBurnLabOwnerAddress(
+        ownr && ownr !== ethers.ZeroAddress ? ownr : OWNER_ADDRESS
+      );
+
+      // The Burn Lab contract must be burning THIS collection's NFTs. If the
+      // deployed Burn Lab's nftContract() doesn't match the NFT contract
+      // this site is configured for, burning must be blocked rather than
+      // silently allowed.
+      setBurnLabNftContractAddress(nftContractAddr || "");
+      setBurnLabNftContractMismatch(
+        !!nftContractAddr &&
+          nftContractAddr.toLowerCase() !== WEB3_CONFIG.NFT_CONTRACT_ADDRESS.toLowerCase()
+      );
 
       const total = Number(count);
       const rewards: BurnReward[] = [];
@@ -847,6 +871,13 @@ const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
     if (!burnLabConfigured) {
       setTxState("TRANSACTION_FAILED");
       setErrorMessage("Burn Lab contract address is not configured yet.");
+      return false;
+    }
+    if (burnLabNftContractMismatch) {
+      setTxState("TRANSACTION_FAILED");
+      setErrorMessage(
+        "Burn Lab contract is configured for a different NFT collection. Burning is disabled until this is fixed."
+      );
       return false;
     }
 
@@ -998,6 +1029,8 @@ const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
         burnLabConfigured,
         burnLabOwnerAddress,
         isBurnLabOwner,
+        burnLabNftContractMismatch,
+        burnLabNftContractAddress,
         burnRewards,
         burnRewardsLoading,
         refreshBurnLabData,
