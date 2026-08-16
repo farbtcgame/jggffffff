@@ -10,6 +10,7 @@ import { ethers } from "ethers";
 import { useWeb3 } from "./Web3Context";
 import { OWNER_ADDRESS, WEB3_CONFIG, CLOCK_IN_CONTRACT_ADDRESS, ALCHEMY_RPC_URL } from "../config/web3";
 import CLOCK_IN_ABI from "../abi/ClockIn.json";
+import { describeTxError } from "../lib/txErrors";
 import ERC20_ABI from "../abi/ERC20.json";
 
 export type ClockInTxState =
@@ -130,7 +131,14 @@ export const ClockInProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         const clockIn = getClockInReadContract();
         const ownr = await clockIn.owner().catch(() => "0x0000000000000000000000000000000000000000");
-        setClockInOwnerAddress(OWNER_ADDRESS);
+        // Use the actual on-chain owner as the source of truth instead of
+        // discarding it and always falling back to the static
+        // OWNER_ADDRESS constant (that constant is the *NFT* contract's
+        // owner and is not guaranteed to be the same wallet as the Clock
+        // In contract's owner).
+        setClockInOwnerAddress(
+          ownr && ownr !== ethers.ZeroAddress ? ownr : OWNER_ADDRESS
+        );
 
         const levels: (1 | 2 | 3)[] = [1, 2, 3];
         const configs = await Promise.all(
@@ -240,7 +248,7 @@ export const ClockInProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Join transaction failed");
+        setErrorMessage(describeTxError(err, "Join transaction failed"));
       }
       return false;
     }
@@ -262,7 +270,7 @@ export const ClockInProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Claim transaction failed");
+        setErrorMessage(describeTxError(err, "Claim transaction failed"));
       }
       return false;
     }
@@ -284,7 +292,7 @@ export const ClockInProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Transaction failed");
+        setErrorMessage(describeTxError(err, "Transaction failed"));
       }
       return false;
     }
@@ -325,7 +333,7 @@ export const ClockInProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Funding reward pool failed");
+        setErrorMessage(describeTxError(err, "Funding reward pool failed"));
       }
       return false;
     }
