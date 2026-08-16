@@ -14,6 +14,7 @@ import { OWNER_ADDRESS, WEB3_CONFIG, STAKING_CONTRACT_ADDRESS, ALCHEMY_RPC_URL }
 import STAKING_ABI from "../abi/NFTStaking.json";
 import ERC721_MINIMAL_ABI from "../abi/ERC721Minimal.json";
 import ERC20_ABI from "../abi/ERC20.json";
+import { describeTxError } from "../lib/txErrors";
 
 export type StakingTxState =
   | "IDLE"
@@ -212,7 +213,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Approval failed");
+        setErrorMessage(describeTxError(err, "Approval failed"));
       }
       return false;
     }
@@ -253,7 +254,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Stake transaction failed");
+        setErrorMessage(describeTxError(err, "Stake transaction failed"));
       }
       return false;
     }
@@ -275,7 +276,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Unstake transaction failed");
+        setErrorMessage(describeTxError(err, "Unstake transaction failed"));
       }
       return false;
     }
@@ -297,7 +298,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Claim transaction failed");
+        setErrorMessage(describeTxError(err, "Claim transaction failed"));
       }
       return false;
     }
@@ -319,7 +320,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Transaction failed");
+        setErrorMessage(describeTxError(err, "Transaction failed"));
       }
       return false;
     }
@@ -347,7 +348,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Funding reward pool failed");
+        setErrorMessage(describeTxError(err, "Funding reward pool failed"));
       }
       return false;
     }
