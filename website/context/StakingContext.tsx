@@ -10,11 +10,10 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { ethers } from "ethers";
 import { useWeb3 } from "./Web3Context";
-import { OWNER_ADDRESS, WEB3_CONFIG, STAKING_CONTRACT_ADDRESS, ALCHEMY_RPC_URL } from "../config/web3";
+import { WEB3_CONFIG, STAKING_CONTRACT_ADDRESS } from "../config/web3";
 import STAKING_ABI from "../abi/NFTStaking.json";
 import ERC721_MINIMAL_ABI from "../abi/ERC721Minimal.json";
 import ERC20_ABI from "../abi/ERC20.json";
-import { describeTxError } from "../lib/txErrors";
 
 export type StakingTxState =
   | "IDLE"
@@ -40,11 +39,6 @@ interface StakingContextType {
   stakingConfigured: boolean;
   stakingOwnerAddress: string;
   isStakingOwner: boolean;
-  // True once we've read staking.nftCollection() on-chain and it does NOT
-  // match the NFT contract this site is configured for. Staking must not
-  // be allowed while this is true — see checkStakingApproval/stakeSelected.
-  nftCollectionMismatch: boolean;
-  stakingNftCollectionAddress: string;
   rewardTokenAddress: string;
   rewardTokenSymbol: string;
   rewardTokenDecimals: number;
@@ -75,9 +69,9 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const stakingConfigured = !!STAKING_CONTRACT_ADDRESS;
 
-  const [stakingOwnerAddress, setStakingOwnerAddress] = useState(OWNER_ADDRESS);
-  const [nftCollectionMismatch, setNftCollectionMismatch] = useState(false);
-  const [stakingNftCollectionAddress, setStakingNftCollectionAddress] = useState("");
+  const [stakingOwnerAddress, setStakingOwnerAddress] = useState(
+    "0x0000000000000000000000000000000000000000"
+  );
   const [rewardTokenAddress, setRewardTokenAddress] = useState("");
   const [rewardTokenSymbol, setRewardTokenSymbol] = useState("");
   const [rewardTokenDecimals, setRewardTokenDecimals] = useState(18);
@@ -93,11 +87,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const isStakingOwner =
     !!account && account.toLowerCase() === stakingOwnerAddress.toLowerCase();
 
-  // Read-only staking data (owner, reward config, staked tokens, pending
-  // rewards) goes through Alchemy instead of the raw chain RPC — see the
-  // ALCHEMY_RPC_URL comment in config/web3.ts. Staking transactions still
-  // go through the connected wallet's own `signer`, unaffected.
-  const getReadProvider = () => new ethers.JsonRpcProvider(ALCHEMY_RPC_URL);
+  const getReadProvider = () => new ethers.JsonRpcProvider(WEB3_CONFIG.RPC_URL);
 
   const getStakingReadContract = useCallback(() => {
     return new ethers.Contract(STAKING_CONTRACT_ADDRESS, STAKING_ABI, getReadProvider());
@@ -113,32 +103,14 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setStakedLoading(true);
     try {
       const staking = getStakingReadContract();
-      const [ownr, rToken, perCycle, nftCollection] = await Promise.all([
+      const [ownr, rToken, perCycle] = await Promise.all([
         staking.owner().catch(() => "0x0000000000000000000000000000000000000000"),
         staking.rewardToken().catch(() => ""),
         staking.rewardPerCycle().catch(() => BigInt(0)),
-        staking.nftCollection().catch(() => ""),
       ]);
-      // Use the actual on-chain owner as the source of truth instead of
-      // overwriting it with the static OWNER_ADDRESS constant (that constant
-      // is the *NFT* contract's owner and is not guaranteed to be the same
-      // wallet as the Staking contract's owner).
-      setStakingOwnerAddress(
-        ownr && ownr !== ethers.ZeroAddress ? ownr : OWNER_ADDRESS
-      );
+      setStakingOwnerAddress(ownr);
       setRewardTokenAddress(rToken);
       setRewardPerCycleState(perCycle);
-
-      // The staking contract must be staking THIS collection's NFTs. If the
-      // deployed staking contract's nftCollection() doesn't match the NFT
-      // contract this site is configured for, staking must be blocked
-      // rather than silently allowed (approvals/ownership checks would be
-      // against the wrong collection entirely).
-      setStakingNftCollectionAddress(nftCollection || "");
-      setNftCollectionMismatch(
-        !!nftCollection &&
-          nftCollection.toLowerCase() !== WEB3_CONFIG.NFT_CONTRACT_ADDRESS.toLowerCase()
-      );
 
       if (rToken && rToken !== ethers.ZeroAddress) {
         const [meta, poolBal] = await Promise.all([
@@ -213,7 +185,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(describeTxError(err, "Approval failed"));
+        setErrorMessage(err.reason || err.message || "Approval failed");
       }
       return false;
     }
@@ -224,13 +196,6 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!stakingConfigured) {
       setTxState("TRANSACTION_FAILED");
       setErrorMessage("Staking contract address is not configured yet.");
-      return false;
-    }
-    if (nftCollectionMismatch) {
-      setTxState("TRANSACTION_FAILED");
-      setErrorMessage(
-        "Staking contract is configured for a different NFT collection. Staking is disabled until this is fixed."
-      );
       return false;
     }
     try {
@@ -254,7 +219,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(describeTxError(err, "Stake transaction failed"));
+        setErrorMessage(err.reason || err.message || "Stake transaction failed");
       }
       return false;
     }
@@ -276,7 +241,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(describeTxError(err, "Unstake transaction failed"));
+        setErrorMessage(err.reason || err.message || "Unstake transaction failed");
       }
       return false;
     }
@@ -298,7 +263,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(describeTxError(err, "Claim transaction failed"));
+        setErrorMessage(err.reason || err.message || "Claim transaction failed");
       }
       return false;
     }
@@ -320,7 +285,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(describeTxError(err, "Transaction failed"));
+        setErrorMessage(err.reason || err.message || "Transaction failed");
       }
       return false;
     }
@@ -348,7 +313,7 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(describeTxError(err, "Funding reward pool failed"));
+        setErrorMessage(err.reason || err.message || "Funding reward pool failed");
       }
       return false;
     }
@@ -360,8 +325,6 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         stakingConfigured,
         stakingOwnerAddress,
         isStakingOwner,
-        nftCollectionMismatch,
-        stakingNftCollectionAddress,
         rewardTokenAddress,
         rewardTokenSymbol,
         rewardTokenDecimals,
