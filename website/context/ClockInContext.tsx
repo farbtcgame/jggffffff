@@ -8,7 +8,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { ethers } from "ethers";
 import { useWeb3 } from "./Web3Context";
-import { WEB3_CONFIG, CLOCK_IN_CONTRACT_ADDRESS, ALCHEMY_RPC_URL } from "../config/web3";
+import { OWNER_ADDRESS, WEB3_CONFIG, CLOCK_IN_CONTRACT_ADDRESS, ALCHEMY_RPC_URL } from "../config/web3";
 import CLOCK_IN_ABI from "../abi/ClockIn.json";
 import ERC20_ABI from "../abi/ERC20.json";
 
@@ -92,9 +92,7 @@ export const ClockInProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const clockInConfigured = !!CLOCK_IN_CONTRACT_ADDRESS;
 
-  const [clockInOwnerAddress, setClockInOwnerAddress] = useState(
-    "0x0000000000000000000000000000000000000000"
-  );
+  const [clockInOwnerAddress, setClockInOwnerAddress] = useState(OWNER_ADDRESS);
   const [vipConfigs, setVipConfigs] = useState<VipLevelConfig[]>([
     EMPTY_VIP(1),
     EMPTY_VIP(2),
@@ -132,7 +130,7 @@ export const ClockInProvider: React.FC<{ children: React.ReactNode }> = ({ child
       try {
         const clockIn = getClockInReadContract();
         const ownr = await clockIn.owner().catch(() => "0x0000000000000000000000000000000000000000");
-        setClockInOwnerAddress(ownr);
+        setClockInOwnerAddress(OWNER_ADDRESS);
 
         const levels: (1 | 2 | 3)[] = [1, 2, 3];
         const configs = await Promise.all(

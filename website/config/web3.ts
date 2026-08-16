@@ -25,6 +25,8 @@ export const ROBINHOOD_MAINNET: ChainConfig = {
 
 export const ACTIVE_CHAIN: ChainConfig = ROBINHOOD_MAINNET;
 
+export const OWNER_ADDRESS = "0x1C6D114411342AE48D8FAF98Ac32a9e12F1Fd262";
+
 // Kept as `true` — the Alchemy NFT API base URL below is always the
 // mainnet subdomain now that testnet has been removed.
 const USE_MAINNET = true;
@@ -71,7 +73,8 @@ export const STONKBROKER_BUY_URL =
 // ==========================================
 // IPFS gateway used for the rotating preview-card images on the mint page
 // ==========================================
-export const IPFS_GATEWAY = process.env.NEXT_PUBLIC_IPFS_GATEWAY || "https://ipfs.io/ipfs/";
+// Keep NFT metadata resolution on the single supported public gateway.
+export const IPFS_GATEWAY = "https://ipfs.io/ipfs/";
 
 // ==========================================
 // Alchemy — used by the Staking page to look up which Mini Brokers NFTs
@@ -97,9 +100,7 @@ export const ALCHEMY_NFT_API_BASE = USE_MAINNET
 // transactions are unaffected — those always go through the connected
 // wallet's own injected provider, never this one.
 export const ALCHEMY_RPC_URL = ALCHEMY_API_KEY
-  ? USE_MAINNET
-    ? `https://robinhood-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
-    : `https://robinhood-testnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+  ? `https://robinhood-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
   : ACTIVE_CHAIN.RPC_URL;
 
 // ==========================================

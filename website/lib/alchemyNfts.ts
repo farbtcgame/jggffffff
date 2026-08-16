@@ -9,7 +9,23 @@ export interface OwnedNft {
 function toGatewayUrl(uri: string): string {
   if (!uri) return "";
   if (uri.startsWith("ipfs://")) return IPFS_GATEWAY + uri.replace("ipfs://", "");
+  if (uri.startsWith("ar://")) return `https://arweave.net/${uri.slice(5)}`;
   return uri;
+}
+
+async function fetchJson(url: string, init?: RequestInit): Promise<any> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal, cache: "no-store" });
+    if (!response.ok) throw new Error(`ALCHEMY_HTTP_${response.status}`);
+    return await response.json();
+  } catch (error: any) {
+    if (error?.name === "AbortError") throw new Error("ALCHEMY_TIMEOUT");
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 /**
@@ -41,18 +57,19 @@ export async function fetchOwnedMiniBrokers(ownerAddress: string): Promise<Owned
       `&withMetadata=true&pageSize=100` +
       (pageKey ? `&pageKey=${encodeURIComponent(pageKey)}` : "");
 
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`ALCHEMY_HTTP_${res.status}`);
-    }
-
-    const data = await res.json();
+    const data = await fetchJson(url);
     const nfts = Array.isArray(data.ownedNfts) ? data.ownedNfts : [];
     all.push(...nfts);
     pageKey = typeof data.pageKey === "string" ? data.pageKey : undefined;
   } while (pageKey);
 
-  return all.map((nft: any): OwnedNft => {
+  const unique = new Map<string, any>();
+  for (const nft of all) {
+    const tokenId = String(nft.tokenId ?? nft.id?.tokenId ?? "?");
+    unique.set(tokenId, nft);
+  }
+
+  return [...unique.values()].map((nft: any): OwnedNft => {
     const tokenId: string = nft.tokenId ?? nft.id?.tokenId ?? "?";
     const name: string = nft.name || nft.contract?.name || `404 Origin #${tokenId}`;
     const rawImage: string =
@@ -82,7 +99,7 @@ export async function fetchNftMetadataByIds(tokenIds: string[]): Promise<OwnedNf
 
   const url = `${ALCHEMY_NFT_API_BASE}/getNFTMetadataBatch`;
 
-  const res = await fetch(url, {
+  const data = await fetchJson(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -92,11 +109,6 @@ export async function fetchNftMetadataByIds(tokenIds: string[]): Promise<OwnedNf
       })),
     }),
   });
-  if (!res.ok) {
-    throw new Error(`ALCHEMY_HTTP_${res.status}`);
-  }
-
-  const data = await res.json();
   const nfts = Array.isArray(data.nfts) ? data.nfts : [];
 
   return nfts.map((nft: any): OwnedNft => {
