@@ -6,6 +6,7 @@ import { OWNER_ADDRESS, WEB3_CONFIG, WALLETCONNECT_PROJECT_ID, WALLETCONNECT_CHA
 import NFT_ABI from "../abi/NFT.json";
 import ERC20_ABI from "../abi/ERC20.json";
 import BURN_LAB_ABI from "../abi/BurnLab.json";
+import { describeTxError } from "../lib/txErrors";
 import ERC721_MINIMAL_ABI from "../abi/ERC721Minimal.json";
 import {
   WALLET_CATALOG,
@@ -685,7 +686,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         setTxState("INSUFFICIENT_BALANCE");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Transaction failed");
+        setErrorMessage(describeTxError(err, "Transaction failed"));
       }
     }
   };
@@ -706,7 +707,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       console.error(err);
       setTxState("TRANSACTION_FAILED");
-      setErrorMessage(err.reason || err.message || "Execution failed");
+      setErrorMessage(describeTxError(err, "Execution failed"));
       return false;
     }
   };
@@ -853,7 +854,7 @@ const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Approval failed");
+        setErrorMessage(describeTxError(err, "Approval failed"));
       }
       return false;
     }
@@ -920,7 +921,7 @@ const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
         setTxState("INSUFFICIENT_REWARD_BALANCE");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Burn transaction failed");
+        setErrorMessage(describeTxError(err, "Burn transaction failed"));
       }
       return false;
     }
@@ -944,7 +945,7 @@ const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Execution failed");
+        setErrorMessage(describeTxError(err, "Execution failed"));
       }
       return false;
     }
@@ -986,7 +987,7 @@ const [burnLabOwnerAddress, setBurnLabOwnerAddress] = useState(OWNER_ADDRESS);
         setTxState("TRANSACTION_REJECTED");
       } else {
         setTxState("TRANSACTION_FAILED");
-        setErrorMessage(err.reason || err.message || "Loading reward tokens failed");
+        setErrorMessage(describeTxError(err, "Loading reward tokens failed"));
       }
       return false;
     }
