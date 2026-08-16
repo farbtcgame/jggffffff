@@ -20,11 +20,7 @@ export const ROBINHOOD_MAINNET: ChainConfig = {
   CHAIN_NAME: "Robinhood Chain",
   RPC_URL: process.env.NEXT_PUBLIC_ROBINHOOD_MAINNET_RPC_URL || "https://rpc.mainnet.chain.robinhood.com",
   EXPLORER_URL: "https://robinhoodchain.blockscout.com",
-  // Robinhood Chain's native gas token is ETH (not "RH") — this must match
-  // exactly, or wallets reject wallet_addEthereumChain / wallet_switchEthereumChain
-  // for chain ID 4663 with a "symbol mismatch" error, which is what was
-  // blocking wallet connections on the site.
-  CURRENCY_SYMBOL: "ETH",
+  CURRENCY_SYMBOL: "RH",
 };
 
 export const ACTIVE_CHAIN: ChainConfig = ROBINHOOD_MAINNET;
@@ -41,16 +37,13 @@ export interface Web3Config extends ChainConfig {
 
 export const WEB3_CONFIG: Web3Config = {
   ...ACTIVE_CHAIN,
-  // OrigiPunk collection contract (deployed).
+  // Fill this in after `npm run deploy:testnet` / `deploy:mainnet` in /hardhat.
   NFT_CONTRACT_ADDRESS:
     process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS || "0x68e5a6aaf2503940f0337243063ab8f4da6bedec",
-  // OrigiPunkToken — the $ORIGIN ERC-20 (mint payment token + the token
-  // shown as "burned" on the homepage Token Burn card).
-  MINT_TOKEN_ADDRESS:
-    process.env.NEXT_PUBLIC_MINT_TOKEN_ADDRESS || "0xa9635A21fE99084F0C795D33Fc3A45fCDb3027AF",
-  // OrigiPunkBurn — Burn Lab / permanent-burn rewards contract. NFTs sent
-  // here go straight to the dead address (0x000...dEaD); this contract
-  // never holds custody.
+  // Fixed mint payment token, as specified.
+  MINT_TOKEN_ADDRESS: "0xa9635A21fE99084F0C795D33Fc3A45fCDb3027AF",
+  // Burn Lab — permanent-burn rewards contract. NFTs sent here go straight
+  // to the dead address (0x000...dEaD); this contract never holds custody.
   BURN_LAB_CONTRACT_ADDRESS:
     process.env.NEXT_PUBLIC_BURN_LAB_CONTRACT_ADDRESS || "0xB1d0F60B99Cc7e96674a1A2b83d3357FB3018c06",
 };
@@ -93,26 +86,6 @@ export const ALCHEMY_NFT_API_BASE = USE_MAINNET
   ? `https://robinhood-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_API_KEY}`
   : `https://robinhood-testnet.g.alchemy.com/nft/v3/${ALCHEMY_API_KEY}`;
 
-// Alchemy's standard JSON-RPC endpoint (same "robinhood-mainnet" subdomain
-// as the NFT API above, just the /v2/ node endpoint instead of /nft/v3/).
-// All read-only chain calls made directly from the browser (homepage
-// supply/burn stats, collection activity logs, Staking/Clock In config
-// reads) were pointed at rpc.mainnet.chain.robinhood.com, which isn't
-// reliably callable straight from a browser tab (no CORS allowance for
-// arbitrary origins) — that's what produced the "Couldn't load on-chain
-// supply right now." / "Couldn't load token burn stats right now." /
-// "Couldn't load collection activity right now." errors. Alchemy's
-// endpoint is CORS-enabled for browser use, so every read-only provider
-// in the app now goes through this when a key is configured, falling
-// back to the direct chain RPC only if NEXT_PUBLIC_ALCHEMY_API_KEY isn't
-// set. Wallet-signed transactions are unaffected — those always go
-// through the connected wallet's own injected provider, never this one.
-export const ALCHEMY_RPC_URL = ALCHEMY_API_KEY
-  ? USE_MAINNET
-    ? `https://robinhood-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
-    : `https://robinhood-testnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
-  : ACTIVE_CHAIN.RPC_URL;
-
 // ==========================================
 // Exchange (SWAP) — Robinhood Chain MAINNET only
 // ==========================================
@@ -125,8 +98,8 @@ export const SWAP_ROUTER_ADDRESS = process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS |
 // Defaults to the existing mint payment token so the Exchange page has a
 // sensible pair configured out of the box.
 export const SWAP_TOKEN_ADDRESS =
-  process.env.NEXT_PUBLIC_SWAP_TOKEN_ADDRESS || "0xe934e36a439c94017b64a3fece66af12099abf50";
-export const SWAP_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_SWAP_TOKEN_SYMBOL || "ORIGIN";
+  process.env.NEXT_PUBLIC_SWAP_TOKEN_ADDRESS || "0xa9635A21fE99084F0C795D33Fc3A45fCDb3027AF";
+export const SWAP_TOKEN_SYMBOL = process.env.NEXT_PUBLIC_SWAP_TOKEN_SYMBOL || "MINI";
 
 // Single configurable launch timestamp for the Exchange 14-day countdown.
 // Accepts an ISO-8601 date string (recommended) or a raw millisecond
@@ -155,4 +128,4 @@ export const CLOCK_IN_LAUNCH_TIMESTAMP =
 // read this to decide whether staking is wired up yet.
 // ==========================================================
 export const STAKING_CONTRACT_ADDRESS =
-  process.env.NEXT_PUBLIC_STAKING_CONTRACT_ADDRESS || "0x8f02b1ca2a5876964A0f514754B70D234f91B8D5";
+  process.env.NEXT_PUBLIC_STAKING_CONTRACT_ADDRESS || "";
