@@ -346,7 +346,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
       const onChainChanged = (id: string | number) => {
-        const parsed = typeof id === "string" ? parseInt(id, 16) : Number(id);
+        const parsed = typeof id === "string" ? (id.startsWith("0x") ? parseInt(id, 16) : Number(id)) : Number(id);
         setChainId(parsed);
       };
       const onDisconnect = () => {
@@ -388,6 +388,17 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!accounts || accounts.length === 0) {
         throw new Error("No accounts returned by wallet.");
       }
+
+      // Always connect on Robinhood Chain mainnet. Wallets can retain a prior
+      // network selection, so switch before creating the signer and reading
+      // contract state.
+      await switchOrAddChain(provider, {
+        chainId: WEB3_CONFIG.CHAIN_ID,
+        chainName: WEB3_CONFIG.CHAIN_NAME,
+        rpcUrl: WEB3_CONFIG.RPC_URL,
+        explorerUrl: WEB3_CONFIG.EXPLORER_URL,
+        currencySymbol: WEB3_CONFIG.CURRENCY_SYMBOL,
+      });
 
       const browserProvider = new ethers.BrowserProvider(provider);
       const network = await browserProvider.getNetwork();

@@ -98,9 +98,7 @@ export const ALCHEMY_NFT_API_BASE = USE_MAINNET
 // transactions are unaffected — those always go through the connected
 // wallet's own injected provider, never this one.
 export const ALCHEMY_RPC_URL = ALCHEMY_API_KEY
-  ? USE_MAINNET
-    ? `https://robinhood-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
-    : `https://robinhood-testnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+  ? `https://robinhood-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
   : ACTIVE_CHAIN.RPC_URL;
 
 // ==========================================
