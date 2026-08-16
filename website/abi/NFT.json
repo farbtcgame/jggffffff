@@ -1,0 +1,49 @@
+[
+  { "inputs": [], "name": "MAX_SUPPLY", "outputs": [{ "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "totalSupply", "outputs": [{ "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "paymentToken", "outputs": [{ "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "mintPrice", "outputs": [{ "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "treasuryWallet", "outputs": [{ "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "publicMintEnabled", "outputs": [{ "type": "bool" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "mintingPaused", "outputs": [{ "type": "bool" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "revealed", "outputs": [{ "type": "bool" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "unrevealedURI", "outputs": [{ "type": "string" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "baseURI", "outputs": [{ "type": "string" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "paused", "outputs": [{ "type": "bool" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "owner", "outputs": [{ "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "name", "outputs": [{ "type": "string" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "symbol", "outputs": [{ "type": "string" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "type": "uint256" }], "name": "tokenURI", "outputs": [{ "type": "string" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "type": "uint256" }, { "type": "uint256" }], "name": "royaltyInfo", "outputs": [{ "type": "address" }, { "type": "uint256" }], "stateMutability": "view", "type": "function" },
+
+  { "inputs": [{ "name": "quantity", "type": "uint256" }], "name": "mint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "to", "type": "address" }, { "name": "quantity", "type": "uint256" }], "name": "ownerMint", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+
+  { "inputs": [{ "name": "newToken", "type": "address" }], "name": "setPaymentToken", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "newPrice", "type": "uint256" }], "name": "setMintPrice", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "newWallet", "type": "address" }], "name": "setTreasuryWallet", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "enabled", "type": "bool" }], "name": "setPublicMintEnabled", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "paused", "type": "bool" }], "name": "setMintingPaused", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "paused", "type": "bool" }], "name": "setTransfersPaused", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+
+  { "inputs": [{ "name": "uri", "type": "string" }], "name": "setUnrevealedURI", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "newBaseURI", "type": "string" }], "name": "reveal", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+
+  { "inputs": [{ "name": "receiver", "type": "address" }, { "name": "feeBps", "type": "uint96" }], "name": "setRoyaltyInfo", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+
+  { "inputs": [], "name": "refreshMetadata", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "tokenId", "type": "uint256" }], "name": "refreshMetadata", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+
+  { "inputs": [{ "name": "tokenIds", "type": "uint256[]" }, { "name": "rewards", "type": "uint32[]" }], "name": "setRewardBatch", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [], "name": "lockRewardMapping", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "type": "uint256" }], "name": "rewardPerDay", "outputs": [{ "type": "uint32" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "type": "uint256" }], "name": "rewardSet", "outputs": [{ "type": "bool" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "rewardMappingLocked", "outputs": [{ "type": "bool" }], "stateMutability": "view", "type": "function" },
+
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "to", "type": "address" }, { "indexed": true, "name": "startTokenId", "type": "uint256" }, { "indexed": false, "name": "quantity", "type": "uint256" }, { "indexed": false, "name": "totalPaid", "type": "uint256" }], "name": "Minted", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": false, "name": "enabled", "type": "bool" }], "name": "PublicMintToggled", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": false, "name": "paused", "type": "bool" }], "name": "MintingPausedToggled", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": false, "name": "oldPrice", "type": "uint256" }, { "indexed": false, "name": "newPrice", "type": "uint256" }], "name": "MintPriceUpdated", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": false, "name": "uri", "type": "string" }], "name": "Revealed", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": false, "name": "_fromTokenId", "type": "uint256" }, { "indexed": false, "name": "_toTokenId", "type": "uint256" }], "name": "BatchMetadataUpdate", "type": "event" }
+]

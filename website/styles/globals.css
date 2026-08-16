@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 404 ORIGIN PUNK inspired design system — neon-acid on void black, glass surfaces, pixel edges. */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@layer base {
+  body {
+    @apply bg-void text-zinc-200 antialiased font-mono;
+    background-image:
+      radial-gradient(110% 80% at 50% -10%, rgba(204,255,0,0.10) 0%, transparent 60%),
+      radial-gradient(80% 60% at 90% 10%, rgba(127,231,216,0.08) 0%, transparent 65%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: #CCFF00;
+    color: #0a0a0a;
+  }
+}
+
+/* Custom Scrollbar for the void aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0B0D;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2c33;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #CCFF00;
+}
+
+/* Hide scrollbar for clean navigation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ============ Origin Punk utility classes ============ */
+
+.glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255,255,255,0.09);
+}
+
+.glass-strong {
+  background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 20px 60px -24px rgba(0,0,0,0.8);
+}
+
+.text-neon {
+  color: #CCFF00;
+  text-shadow: 0 0 22px rgba(204,255,0,0.45);
+}
+
+.gradient-text {
+  background: linear-gradient(120deg, #CCFF00 0%, #baf25a 45%, #7FE7D8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.grid-lines {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.pixel-corners {
+  clip-path: polygon(
+    10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px
+  );
+}
+
+.label-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(161 161 170);
+}
+
+.hover-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(100deg, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.10) 42%, rgba(255,255,255,0.04) 64%);
+  background-size: 200% 100%;
+  animation: sheen 1.6s linear infinite;
+}
+@keyframes sheen {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Right-to-left infinite marquee (ticker) */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 34s linear infinite;
+  will-change: transform;
+}
+.marquee-row:hover .marquee-track {
+  animation-play-state: paused;
+}

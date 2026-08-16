@@ -1,0 +1,51 @@
+[
+  { "inputs": [{ "name": "nftCollection_", "type": "address" }, { "name": "initialOwner", "type": "address" }], "stateMutability": "nonpayable", "type": "constructor" },
+
+  { "inputs": [], "name": "nftCollection", "outputs": [{ "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "owner", "outputs": [{ "type": "address" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "CYCLE_DURATION", "outputs": [{ "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [], "name": "VIP_LEVELS", "outputs": [{ "type": "uint8" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "type": "uint8" }], "name": "vipConfig", "outputs": [{ "name": "feeToken", "type": "address" }, { "name": "feeAmount", "type": "uint256" }, { "name": "rewardToken", "type": "address" }, { "name": "rewardAmountPerCycle", "type": "uint256" }, { "name": "active", "type": "bool" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "type": "uint256" }], "name": "registrations", "outputs": [{ "name": "vipLevel", "type": "uint8" }, { "name": "registrant", "type": "address" }, { "name": "registeredAt", "type": "uint64" }, { "name": "lastClaimAt", "type": "uint64" }, { "name": "transferDetectedAt", "type": "uint64" }, { "name": "active", "type": "bool" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "type": "address" }], "name": "rewardTokenBalance", "outputs": [{ "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "type": "address" }], "name": "collectedFees", "outputs": [{ "type": "uint256" }], "stateMutability": "view", "type": "function" },
+
+  { "inputs": [{ "name": "vipLevel", "type": "uint8" }, { "name": "tokenIds", "type": "uint256[]" }], "name": "join", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "tokenIds", "type": "uint256[]" }], "name": "claim", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "tokenId", "type": "uint256" }], "name": "syncRegistration", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+
+  { "inputs": [{ "name": "tokenId", "type": "uint256" }], "name": "pendingReward", "outputs": [{ "name": "cycles", "type": "uint256" }, { "name": "amount", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+  { "inputs": [{ "name": "tokenId", "type": "uint256" }], "name": "isRegistered", "outputs": [{ "type": "bool" }], "stateMutability": "view", "type": "function" },
+
+  { "inputs": [{ "name": "vipLevel", "type": "uint8" }, { "name": "feeToken", "type": "address" }, { "name": "feeAmount", "type": "uint256" }, { "name": "rewardToken", "type": "address" }, { "name": "rewardAmountPerCycle", "type": "uint256" }, { "name": "active", "type": "bool" }], "name": "configureVip", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "vipLevel", "type": "uint8" }, { "name": "active", "type": "bool" }], "name": "setVipActive", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "token", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "fundRewardToken", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "token", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "withdrawRewardToken", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "feeToken", "type": "address" }, { "name": "amount", "type": "uint256" }], "name": "withdrawFees", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "token", "type": "address" }, { "name": "recipients", "type": "address[]" }, { "name": "amounts", "type": "uint256[]" }], "name": "communityAirdrop", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+  { "inputs": [{ "name": "newOwner", "type": "address" }], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" },
+
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "vipLevel", "type": "uint8" }, { "indexed": false, "name": "feeToken", "type": "address" }, { "indexed": false, "name": "feeAmount", "type": "uint256" }, { "indexed": false, "name": "rewardToken", "type": "address" }, { "indexed": false, "name": "rewardAmountPerCycle", "type": "uint256" }, { "indexed": false, "name": "active", "type": "bool" }], "name": "VipConfigured", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "user", "type": "address" }, { "indexed": true, "name": "vipLevel", "type": "uint8" }, { "indexed": true, "name": "tokenId", "type": "uint256" }, { "indexed": false, "name": "feePaid", "type": "uint256" }], "name": "Joined", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "user", "type": "address" }, { "indexed": true, "name": "tokenId", "type": "uint256" }, { "indexed": false, "name": "cycles", "type": "uint256" }, { "indexed": false, "name": "amount", "type": "uint256" }], "name": "Claimed", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "tokenId", "type": "uint256" }, { "indexed": true, "name": "previousRegistrant", "type": "address" }], "name": "RegistrationExpired", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "admin", "type": "address" }, { "indexed": true, "name": "token", "type": "address" }, { "indexed": false, "name": "amount", "type": "uint256" }], "name": "RewardsFunded", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "admin", "type": "address" }, { "indexed": true, "name": "token", "type": "address" }, { "indexed": false, "name": "amount", "type": "uint256" }], "name": "RewardsWithdrawn", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "admin", "type": "address" }, { "indexed": true, "name": "token", "type": "address" }, { "indexed": false, "name": "amount", "type": "uint256" }], "name": "FeesWithdrawn", "type": "event" },
+  { "anonymous": false, "inputs": [{ "indexed": true, "name": "admin", "type": "address" }, { "indexed": true, "name": "token", "type": "address" }, { "indexed": false, "name": "totalAmount", "type": "uint256" }, { "indexed": false, "name": "recipientCount", "type": "uint256" }], "name": "CommunityAirdrop", "type": "event" },
+
+  { "inputs": [], "name": "InvalidVipLevel", "type": "error" },
+  { "inputs": [], "name": "VipNotActive", "type": "error" },
+  { "inputs": [], "name": "NotTokenOwner", "type": "error" },
+  { "inputs": [], "name": "AlreadyRegistered", "type": "error" },
+  { "inputs": [], "name": "NotRegistrant", "type": "error" },
+  { "inputs": [], "name": "RegistrationInactive", "type": "error" },
+  { "inputs": [], "name": "NothingToClaim", "type": "error" },
+  { "inputs": [], "name": "InsufficientRewardBalance", "type": "error" },
+  { "inputs": [], "name": "InsufficientFeeBalance", "type": "error" },
+  { "inputs": [], "name": "EmptyList", "type": "error" },
+  { "inputs": [], "name": "LengthMismatch", "type": "error" },
+  { "inputs": [], "name": "ZeroAddress", "type": "error" },
+  { "inputs": [], "name": "ZeroAmount", "type": "error" },
+  { "inputs": [{ "name": "account", "type": "address" }], "name": "OwnableUnauthorizedAccount", "type": "error" }
+]
