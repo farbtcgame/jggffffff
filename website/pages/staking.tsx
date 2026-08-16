@@ -62,10 +62,6 @@ export default function StakingPage() {
     loadOwnedNfts();
   }, [loadOwnedNfts]);
 
-  // Staked NFTs are held in custody by the staking contract, so the
-  // owner-based lookup above (`ownedNfts`) never includes them. Resolve
-  // their name/image directly by tokenId instead, so the "Currently
-  // Staked" grid still shows real artwork instead of blank cards.
   useEffect(() => {
     let cancelled = false;
     const idsToFetch = stakedTokens
@@ -93,7 +89,6 @@ export default function StakingPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stakedTokens]);
 
   useEffect(() => {
@@ -103,8 +98,12 @@ export default function StakingPage() {
         setNeedsApproval(null);
         return;
       }
-      const approved = await checkStakingApproval(account);
-      if (!cancelled) setNeedsApproval(!approved);
+      try {
+        const approved = await checkStakingApproval(account);
+        if (!cancelled) setNeedsApproval(!approved);
+      } catch (e) {
+        if (!cancelled) setNeedsApproval(true);
+      }
     }
     check();
     return () => {
@@ -123,7 +122,6 @@ export default function StakingPage() {
     }
   }, [txState, loadOwnedNfts]);
 
-  // NFTs currently owned (unstaked, available to stake) vs. currently staked.
   const stakedIdSet = useMemo(() => new Set(stakedTokens.map((t) => t.tokenId)), [stakedTokens]);
   const availableNfts = useMemo(() => ownedNfts.filter((n) => !stakedIdSet.has(n.tokenId)), [ownedNfts, stakedIdSet]);
 
@@ -158,8 +156,12 @@ export default function StakingPage() {
   };
 
   const fmt = (amount: bigint, decimals: number) => {
-    const formatted = ethers.formatUnits(amount, decimals);
-    return parseFloat(formatted).toLocaleString(undefined, { maximumFractionDigits: 4 });
+    try {
+      const formatted = ethers.formatUnits(amount, decimals);
+      return parseFloat(formatted).toLocaleString(undefined, { maximumFractionDigits: 4 });
+    } catch {
+      return "0";
+    }
   };
 
   const totalPendingReward = useMemo(
@@ -173,6 +175,16 @@ export default function StakingPage() {
       const approved = await checkStakingApproval(account);
       setNeedsApproval(!approved);
     }
+  };
+
+  const handleStakeAction = async () => {
+    if (!account) return;
+    const isApprovedNow = await checkStakingApproval(account);
+    if (!isApprovedNow) {
+      setNeedsApproval(true);
+      return;
+    }
+    await stakeSelected(Array.from(selected));
   };
 
   const txStatusLabel: Record<string, string> = {
@@ -197,7 +209,6 @@ export default function StakingPage() {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* ORIGIN Vault promo banner */}
         <div className="relative border border-neon/40 bg-neon p-6 overflow-hidden">
           <span className="pointer-events-none select-none absolute -right-2 -bottom-4 text-7xl md:text-8xl font-black text-black/10 tracking-tight">
             STAKE
@@ -229,7 +240,6 @@ export default function StakingPage() {
           </div>
         )}
 
-        {/* Header */}
         <div className="border border-white/10 glass p-6">
           <div className="flex justify-between items-start flex-wrap gap-3">
             <div>
@@ -275,10 +285,9 @@ export default function StakingPage() {
           </div>
         </div>
 
-        {/* Available to stake */}
         <div className="glass pixel-corners p-6 space-y-4">
           <div className="flex justify-between items-center flex-wrap gap-2">
-            <h3 className="font-display font-display text-sm font-bold text-white tracking-widest">AVAILABLE TO STAKE</h3>
+            <h3 className="font-display text-sm font-bold text-white tracking-widest">AVAILABLE TO STAKE</h3>
             <div className="flex items-center gap-3">
               {availableNfts.length > 0 && (
                 <button
@@ -332,7 +341,6 @@ export default function StakingPage() {
                   >
                     <div className="aspect-square w-full bg-white/[0.04] pixel-corners overflow-hidden flex items-center justify-center">
                       {nft.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={nft.image} alt={nft.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-[10px] text-zinc-600">NO IMAGE</span>
@@ -369,7 +377,7 @@ export default function StakingPage() {
               </button>
             ) : (
               <button
-                onClick={() => stakeSelected(Array.from(selected))}
+                onClick={handleStakeAction}
                 disabled={selected.size === 0 || isBusy || !stakingConfigured}
                 className="flex-1 py-3 bg-neon text-black font-bold text-xs tracking-widest pixel-corners disabled:opacity-30 disabled:cursor-not-allowed hover:shadow-glow transition-shadow"
               >
@@ -386,10 +394,9 @@ export default function StakingPage() {
           )}
         </div>
 
-        {/* Currently staked */}
         <div className="glass pixel-corners p-6 space-y-4">
           <div className="flex justify-between items-center flex-wrap gap-2">
-            <h3 className="font-display font-display text-sm font-bold text-white tracking-widest">CURRENTLY STAKED</h3>
+            <h3 className="font-display text-sm font-bold text-white tracking-widest">CURRENTLY STAKED</h3>
             <div className="flex items-center gap-3">
               {stakedTokens.length > 0 && (
                 <button
@@ -426,7 +433,6 @@ export default function StakingPage() {
                   >
                     <div className="aspect-square w-full bg-white/[0.04] pixel-corners overflow-hidden flex items-center justify-center">
                       {nftMeta?.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={nftMeta.image} alt={nftMeta.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-[10px] text-zinc-600">#{t.tokenId}</span>
