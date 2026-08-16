@@ -39,6 +39,11 @@ interface StakingContextType {
   stakingConfigured: boolean;
   stakingOwnerAddress: string;
   isStakingOwner: boolean;
+  // True once we've read staking.nftCollection() on-chain and it does NOT
+  // match the NFT contract this site is configured for. Staking must not
+  // be allowed while this is true — see checkStakingApproval/stakeSelected.
+  nftCollectionMismatch: boolean;
+  stakingNftCollectionAddress: string;
   rewardTokenAddress: string;
   rewardTokenSymbol: string;
   rewardTokenDecimals: number;
@@ -70,6 +75,8 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const stakingConfigured = !!STAKING_CONTRACT_ADDRESS;
 
   const [stakingOwnerAddress, setStakingOwnerAddress] = useState(OWNER_ADDRESS);
+  const [nftCollectionMismatch, setNftCollectionMismatch] = useState(false);
+  const [stakingNftCollectionAddress, setStakingNftCollectionAddress] = useState("");
   const [rewardTokenAddress, setRewardTokenAddress] = useState("");
   const [rewardTokenSymbol, setRewardTokenSymbol] = useState("");
   const [rewardTokenDecimals, setRewardTokenDecimals] = useState(18);
@@ -105,14 +112,32 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setStakedLoading(true);
     try {
       const staking = getStakingReadContract();
-      const [ownr, rToken, perCycle] = await Promise.all([
+      const [ownr, rToken, perCycle, nftCollection] = await Promise.all([
         staking.owner().catch(() => "0x0000000000000000000000000000000000000000"),
         staking.rewardToken().catch(() => ""),
         staking.rewardPerCycle().catch(() => BigInt(0)),
+        staking.nftCollection().catch(() => ""),
       ]);
-      setStakingOwnerAddress(OWNER_ADDRESS);
+      // Use the actual on-chain owner as the source of truth instead of
+      // overwriting it with the static OWNER_ADDRESS constant (that constant
+      // is the *NFT* contract's owner and is not guaranteed to be the same
+      // wallet as the Staking contract's owner).
+      setStakingOwnerAddress(
+        ownr && ownr !== ethers.ZeroAddress ? ownr : OWNER_ADDRESS
+      );
       setRewardTokenAddress(rToken);
       setRewardPerCycleState(perCycle);
+
+      // The staking contract must be staking THIS collection's NFTs. If the
+      // deployed staking contract's nftCollection() doesn't match the NFT
+      // contract this site is configured for, staking must be blocked
+      // rather than silently allowed (approvals/ownership checks would be
+      // against the wrong collection entirely).
+      setStakingNftCollectionAddress(nftCollection || "");
+      setNftCollectionMismatch(
+        !!nftCollection &&
+          nftCollection.toLowerCase() !== WEB3_CONFIG.NFT_CONTRACT_ADDRESS.toLowerCase()
+      );
 
       if (rToken && rToken !== ethers.ZeroAddress) {
         const [meta, poolBal] = await Promise.all([
@@ -198,6 +223,13 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!stakingConfigured) {
       setTxState("TRANSACTION_FAILED");
       setErrorMessage("Staking contract address is not configured yet.");
+      return false;
+    }
+    if (nftCollectionMismatch) {
+      setTxState("TRANSACTION_FAILED");
+      setErrorMessage(
+        "Staking contract is configured for a different NFT collection. Staking is disabled until this is fixed."
+      );
       return false;
     }
     try {
@@ -327,6 +359,8 @@ export const StakingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         stakingConfigured,
         stakingOwnerAddress,
         isStakingOwner,
+        nftCollectionMismatch,
+        stakingNftCollectionAddress,
         rewardTokenAddress,
         rewardTokenSymbol,
         rewardTokenDecimals,
