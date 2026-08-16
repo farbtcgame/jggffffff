@@ -58,7 +58,6 @@ export default function BurnLabPage() {
     loadOwnedNfts();
   }, [loadOwnedNfts]);
 
-  // Re-check NFT approval whenever the connected wallet changes.
   useEffect(() => {
     let cancelled = false;
     async function check() {
@@ -66,8 +65,12 @@ export default function BurnLabPage() {
         setNeedsApproval(null);
         return;
       }
-      const approved = await checkBurnApproval(account);
-      if (!cancelled) setNeedsApproval(!approved);
+      try {
+        const approved = await checkBurnApproval(account);
+        if (!cancelled) setNeedsApproval(!approved);
+      } catch (e) {
+        if (!cancelled) setNeedsApproval(true);
+      }
     }
     check();
     return () => {
@@ -99,9 +102,12 @@ export default function BurnLabPage() {
   const selectedCount = selected.size;
 
   const formatAmount = (amount: bigint, decimals: number) => {
-    const formatted = ethers.formatUnits(amount, decimals);
-    // trim trailing zeros for a cleaner display
-    return parseFloat(formatted).toString();
+    try {
+      const formatted = ethers.formatUnits(amount, decimals);
+      return parseFloat(formatted).toString();
+    } catch {
+      return "0";
+    }
   };
 
   const handleApprove = async () => {
@@ -113,6 +119,13 @@ export default function BurnLabPage() {
   };
 
   const handleConfirmBurn = async () => {
+    if (!account) return;
+    const isApprovedNow = await checkBurnApproval(account);
+    if (!isApprovedNow) {
+      setNeedsApproval(true);
+      setShowConfirm(false);
+      return;
+    }
     await executeBurn(Array.from(selected));
   };
 
@@ -137,7 +150,6 @@ export default function BurnLabPage() {
   return (
     <Layout>
       <div className="space-y-8">
-        {/* Header */}
         <div className="border-b border-white/10 pb-4">
           <h1 className="font-display text-xl font-bold text-white tracking-widest uppercase">BURN LAB</h1>
           <p className="text-xs text-zinc-500 mt-1">
@@ -164,10 +176,9 @@ export default function BurnLabPage() {
           </div>
         )}
 
-        {/* Your Collection */}
         <div className="glass pixel-corners p-6 space-y-4">
           <div className="flex justify-between items-center flex-wrap gap-2">
-            <h3 className="font-display font-display text-sm font-bold text-white tracking-widest">YOUR COLLECTION</h3>
+            <h3 className="font-display text-sm font-bold text-white tracking-widest">YOUR COLLECTION</h3>
             <div className="flex items-center gap-3">
               {ownedNfts.length > 0 && (
                 <button
@@ -231,7 +242,6 @@ export default function BurnLabPage() {
                   >
                     <div className="aspect-square w-full bg-white/[0.04] pixel-corners overflow-hidden flex items-center justify-center">
                       {nft.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img src={nft.image} alt={nft.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-[10px] text-zinc-600">NO IMAGE</span>
@@ -259,10 +269,9 @@ export default function BurnLabPage() {
           )}
         </div>
 
-        {/* Reward Preview */}
         <div className="glass pixel-corners p-6 space-y-4">
           <div className="flex justify-between items-center flex-wrap gap-2">
-            <h3 className="font-display font-display text-sm font-bold text-white tracking-widest">REWARD PREVIEW</h3>
+            <h3 className="font-display text-sm font-bold text-white tracking-widest">REWARD PREVIEW</h3>
             <span className="text-[10px] text-zinc-500">
               SELECTED: <span className="text-neon font-bold">{selectedCount} NFT{selectedCount === 1 ? "" : "s"}</span>
             </span>
@@ -287,7 +296,6 @@ export default function BurnLabPage() {
             </div>
           )}
 
-          {/* Approval / Burn actions */}
           <div className="pt-2 border-t border-white/10 space-y-3">
             {needsApproval && selectedCount > 0 && (
               <div className="p-3 border border-amber-900/50 bg-amber-950/20 text-amber-400 text-[10px]">
