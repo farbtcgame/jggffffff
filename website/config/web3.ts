@@ -66,7 +66,7 @@ export const WALLETCONNECT_CHAINS: { id: number; rpc: string }[] = [
 // $StonkBroker token — buy link (OpenSea)
 // ==========================================
 export const STONKBROKER_BUY_URL =
-  "https://opensea.io/collection/mini-brokers";
+  "https://opensea.io/collection/";
 
 // ==========================================
 // IPFS gateway used for the rotating preview-card images on the mint page
@@ -85,6 +85,22 @@ export const ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY || "";
 export const ALCHEMY_NFT_API_BASE = USE_MAINNET
   ? `https://robinhood-mainnet.g.alchemy.com/nft/v3/${ALCHEMY_API_KEY}`
   : `https://robinhood-testnet.g.alchemy.com/nft/v3/${ALCHEMY_API_KEY}`;
+
+// Alchemy's standard JSON-RPC endpoint (same "robinhood-mainnet" subdomain
+// as the NFT API above, just the /v2/ node endpoint instead of /nft/v3/).
+// All read-only chain calls made directly from the browser (homepage
+// supply/burn stats, collection activity logs, Staking/Clock In/Exchange
+// config reads) go through this instead of rpc.mainnet.chain.robinhood.com,
+// which isn't reliably callable straight from a browser tab (no CORS
+// allowance for arbitrary origins). Falls back to the direct chain RPC
+// only if NEXT_PUBLIC_ALCHEMY_API_KEY isn't set. Wallet-signed
+// transactions are unaffected — those always go through the connected
+// wallet's own injected provider, never this one.
+export const ALCHEMY_RPC_URL = ALCHEMY_API_KEY
+  ? USE_MAINNET
+    ? `https://robinhood-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+    : `https://robinhood-testnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}`
+  : ACTIVE_CHAIN.RPC_URL;
 
 // ==========================================
 // Exchange (SWAP) — Robinhood Chain MAINNET only
