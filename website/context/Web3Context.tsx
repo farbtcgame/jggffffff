@@ -428,8 +428,25 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   // every existing component already calls.
   const connectWallet = useCallback(async () => {
     setWalletModalError(null);
+
+    // The primary CTA should immediately trigger the installed wallet prompt.
+    // Previously it only opened the picker, which looked like a no-op when the
+    // user expected MetaMask/Rabby/etc. to open on the first click.
+    const injected = getFallbackInjectedProvider();
+    if (injected) {
+      try {
+        await finalizeConnection(injected, "injected");
+        return;
+      } catch (err: any) {
+        console.error("[v0] Direct wallet connection failed:", err);
+        setWalletModalError(err?.message || "Wallet connection failed. Select a wallet below.");
+      }
+    }
+
+    // No injected extension (or the direct request failed): show the picker so
+    // WalletConnect can be selected for mobile wallets.
     setIsWalletModalOpen(true);
-  }, []);
+  }, [finalizeConnection]);
 
   const closeWalletModal = useCallback(() => {
     if (connectingWalletId) return;
