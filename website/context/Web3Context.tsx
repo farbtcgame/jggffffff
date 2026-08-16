@@ -346,7 +346,7 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       };
       const onChainChanged = (id: string | number) => {
-        const parsed = typeof id === "string" ? parseInt(id, 16) : Number(id);
+        const parsed = typeof id === "string" ? (id.startsWith("0x") ? parseInt(id, 16) : Number(id)) : Number(id);
         setChainId(parsed);
       };
       const onDisconnect = () => {
@@ -389,6 +389,17 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("No accounts returned by wallet.");
       }
 
+      // Always connect on Robinhood Chain mainnet. Wallets can retain a prior
+      // network selection, so switch before creating the signer and reading
+      // contract state.
+      await switchOrAddChain(provider, {
+        chainId: WEB3_CONFIG.CHAIN_ID,
+        chainName: WEB3_CONFIG.CHAIN_NAME,
+        rpcUrl: WEB3_CONFIG.RPC_URL,
+        explorerUrl: WEB3_CONFIG.EXPLORER_URL,
+        currencySymbol: WEB3_CONFIG.CURRENCY_SYMBOL,
+      });
+
       const browserProvider = new ethers.BrowserProvider(provider);
       const network = await browserProvider.getNetwork();
 
@@ -417,8 +428,25 @@ export const Web3Provider: React.FC<{ children: React.ReactNode }> = ({ children
   // every existing component already calls.
   const connectWallet = useCallback(async () => {
     setWalletModalError(null);
+
+    // The primary CTA should immediately trigger the installed wallet prompt.
+    // Previously it only opened the picker, which looked like a no-op when the
+    // user expected MetaMask/Rabby/etc. to open on the first click.
+    const injected = getFallbackInjectedProvider();
+    if (injected) {
+      try {
+        await finalizeConnection(injected, "injected");
+        return;
+      } catch (err: any) {
+        console.error("[v0] Direct wallet connection failed:", err);
+        setWalletModalError(err?.message || "Wallet connection failed. Select a wallet below.");
+      }
+    }
+
+    // No injected extension (or the direct request failed): show the picker so
+    // WalletConnect can be selected for mobile wallets.
     setIsWalletModalOpen(true);
-  }, []);
+  }, [finalizeConnection]);
 
   const closeWalletModal = useCallback(() => {
     if (connectingWalletId) return;
