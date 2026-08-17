@@ -3,8 +3,11 @@ import { Layout } from '../components/Layout';
 import { HourlyCountdownCard } from '../components/Home/HourlyCountdownCard';
 import { SupplyBurnCard } from '../components/Home/SupplyBurnCard';
 import { TokenBurnCard } from '../components/Home/TokenBurnCard';
+import { BurnRewardClaimsCard } from '../components/Home/BurnRewardClaimsCard';
+import { StakingRewardClaimsCard } from '../components/Home/StakingRewardClaimsCard';
 import { TokenTicker } from '../components/Home/TokenTicker';
 import { CollectionGallery } from '../components/Home/CollectionGallery';
+import { EcosystemGuide } from '../components/Home/EcosystemGuide';
 
 export default function Home() {
   return (
@@ -31,11 +34,20 @@ export default function Home() {
           <TokenBurnCard />
         </div>
 
+        {/* Reward claim cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <BurnRewardClaimsCard />
+          <StakingRewardClaimsCard />
+        </div>
+
         {/* Scrolling token ticker */}
         <TokenTicker />
 
         {/* NFT gallery */}
         <CollectionGallery />
+
+        {/* How staking/burn work + weekly reward rotation + liquidity note */}
+        <EcosystemGuide />
       </div>
     </Layout>
   );
