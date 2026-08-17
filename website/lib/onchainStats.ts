@@ -1,7 +1,8 @@
 import { ethers } from "ethers";
-import { WEB3_CONFIG, ALCHEMY_RPC_URL } from "../config/web3";
+import { WEB3_CONFIG, ALCHEMY_RPC_URL, STAKING_CONTRACT_ADDRESS } from "../config/web3";
 import NFT_ABI from "../abi/NFT.json";
 import BURN_LAB_ABI from "../abi/BurnLab.json";
+import STAKING_ABI from "../abi/NFTStakingV2.json";
 
 // Minimal read-only fragments not present in the trimmed ABI files above,
 // but standard on any ERC-721 / ERC-20 implementation.
@@ -77,6 +78,68 @@ export async function fetchTokenBurnStats(): Promise<TokenBurnStats> {
 /** True once the Burn Lab contract address has been configured. */
 export function isBurnLabConfigured(): boolean {
   return Boolean(WEB3_CONFIG.BURN_LAB_CONTRACT_ADDRESS);
+}
+
+/**
+ * Reads how many NFTs from the collection are currently staked — the
+ * staking contract is the custodian of every staked NFT while it's
+ * staked, so its own ERC-721 balance is exactly the live staked count.
+ */
+export async function fetchStakedCount(): Promise<bigint> {
+  if (!STAKING_CONTRACT_ADDRESS) return BigInt(0);
+  const provider = getPublicProvider();
+  const nft = new ethers.Contract(
+    WEB3_CONFIG.NFT_CONTRACT_ADDRESS,
+    [...NFT_ABI, ...ERC721_EXTRA_ABI],
+    provider
+  );
+  return (await nft.balanceOf(STAKING_CONTRACT_ADDRESS)) as bigint;
+}
+
+export interface RewardClaimStats {
+  burnClaims: number;
+  stakingClaims: number;
+}
+
+/**
+ * Counts how many times the configured reward tokens have actually been
+ * paid out, read straight from on-chain event logs (no manually
+ * maintained counter):
+ *  - Burn Lab: every completed burn (`BurnExecuted`) distributes every
+ *    active reward token in the same transaction, so one burn = one
+ *    reward payout event.
+ *  - Staking: every `claimRewards()` call emits one `RewardsClaimed` per
+ *    NFT it claimed for.
+ */
+export async function fetchRewardClaimStats(): Promise<RewardClaimStats> {
+  const provider = getPublicProvider();
+
+  const burnClaimsPromise = (async () => {
+    if (!WEB3_CONFIG.BURN_LAB_CONTRACT_ADDRESS) return 0;
+    try {
+      const burnLab = new ethers.Contract(WEB3_CONFIG.BURN_LAB_CONTRACT_ADDRESS, BURN_LAB_ABI, provider);
+      const logs = await burnLab.queryFilter(burnLab.filters.BurnExecuted());
+      return logs.length;
+    } catch (err) {
+      console.error("Error reading Burn Lab claim logs:", err);
+      return 0;
+    }
+  })();
+
+  const stakingClaimsPromise = (async () => {
+    if (!STAKING_CONTRACT_ADDRESS) return 0;
+    try {
+      const staking = new ethers.Contract(STAKING_CONTRACT_ADDRESS, STAKING_ABI, provider);
+      const logs = await staking.queryFilter(staking.filters.RewardsClaimed());
+      return logs.length;
+    } catch (err) {
+      console.error("Error reading staking claim logs:", err);
+      return 0;
+    }
+  })();
+
+  const [burnClaims, stakingClaims] = await Promise.all([burnClaimsPromise, stakingClaimsPromise]);
+  return { burnClaims, stakingClaims };
 }
 
 export { BURN_LAB_ABI };
