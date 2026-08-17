@@ -1,37 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { ethers } from "ethers";
-import { fetchTokenBurnStats } from "../../lib/onchainStats";
+import { fetchStakedCount } from "../../lib/onchainStats";
+import { STAKING_CONTRACT_ADDRESS } from "../../config/web3";
 
 type LoadState = "LOADING" | "LOADED" | "ERROR";
 
+/**
+ * Live count of how many NFTs from the whole collection are currently
+ * staked. The staking contract is the custodian of every staked NFT, so
+ * its own balanceOf() on the NFT collection is exactly this count —
+ * always in sync with the chain, no admin input needed.
+ */
 export const TokenBurnCard: React.FC = () => {
   const [state, setState] = useState<LoadState>("LOADING");
-  const [burned, setBurned] = useState("0");
-  const [symbol, setSymbol] = useState("ORIGIN");
-  const [percent, setPercent] = useState<string | null>(null);
+  const [staked, setStaked] = useState<bigint>(BigInt(0));
 
   useEffect(() => {
     let live = true;
     async function load() {
       try {
-        const stats = await fetchTokenBurnStats();
+        const count = await fetchStakedCount();
         if (!live) return;
-        const formatted = parseFloat(ethers.formatUnits(stats.burned, stats.decimals));
-        setBurned(formatted.toLocaleString(undefined, { maximumFractionDigits: 2 }));
-        // Displayed as $ORIGIN per the current rebrand, regardless of the
-        // on-chain symbol string.
-        setSymbol("ORIGIN");
-        if (stats.totalSupply > BigInt(0)) {
-          const pct = (Number(stats.burned) / Number(stats.totalSupply)) * 100;
-          setPercent(pct.toFixed(2));
-        }
+        setStaked(count);
         setState("LOADED");
       } catch {
         if (live) setState("ERROR");
       }
     }
     load();
-    const interval = setInterval(load, 60_000);
+    const interval = setInterval(load, 30_000);
     return () => {
       live = false;
       clearInterval(interval);
@@ -42,19 +38,19 @@ export const TokenBurnCard: React.FC = () => {
     <div className="glass pixel-corners p-5 flex flex-col justify-between h-full">
       <div className="flex items-center gap-2">
         <span className="h-1.5 w-1.5 rounded-full bg-neon" />
-        <span className="label-mono">Token Burn</span>
+        <span className="label-mono">NFTS STAKED</span>
       </div>
 
-      {state === "ERROR" ? (
-        <p className="text-xs text-amber-400 mt-4">Couldn&apos;t load token burn stats right now.</p>
+      {!STAKING_CONTRACT_ADDRESS ? (
+        <p className="text-xs text-amber-400 mt-4">Staking contract not configured yet.</p>
+      ) : state === "ERROR" ? (
+        <p className="text-xs text-amber-400 mt-4">Couldn&apos;t load staking stats right now.</p>
       ) : (
         <div className="mt-4">
-          <div className="font-display text-2xl sm:text-3xl font-bold text-neon tabular-nums truncate">
-            {state === "LOADING" ? "···" : burned}
+          <div className="font-display text-2xl sm:text-3xl font-bold text-neon tabular-nums">
+            {state === "LOADING" ? "···" : staked.toString()}
           </div>
-          <div className="label-mono mt-1">
-            ${symbol} Burned{percent ? ` · ${percent}% of supply` : ""}
-          </div>
+          <div className="label-mono mt-1">Live from chain · currently in the Vault</div>
         </div>
       )}
     </div>
